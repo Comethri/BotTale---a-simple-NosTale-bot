@@ -1,1 +1,1 @@
-# BotTale---a-simple-NosTale-bot
+# BotTale - a simple NosTale bot
