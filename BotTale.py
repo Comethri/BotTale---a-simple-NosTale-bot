@@ -8,6 +8,10 @@ window_title = "NosTale"
 pm = pymem.Pymem("NosTaleClientX.exe")
 gameModule = pymem.process.module_from_name(pm.process_handle, "NosTaleClientX.exe").lpBaseOfDll
 
+print("Welcome to BotTale")
+print("BotTale is a bot for the game NosTale written in Python")
+print("BotTale is currently in development")
+
 try:
     process = pymem.Pymem("NosTaleClientX.exe")
     find = "NosTale found"
@@ -28,24 +32,32 @@ def GetPtrAddr(base, offsets):
 
 HP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC4, 0x4C])
 MP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC8, 0x4C])
+maxHP_address = GetPtrAddr(gameModule + 0x004B2F68, [0x264, 0x48])
+maxMP_address = GetPtrAddr(gameModule + 0x004B2F68, [0x268, 0x48])
 targetHP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC8, 0xC4])
 targetMP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC4, 0x22C])
+targetmaxHP_address = GetPtrAddr(gameModule + 0x004B2F68, [0x268, 0xC0])
+targetmaxMP_address = GetPtrAddr(gameModule + 0x004B2F68, [0x268, 0x138])
 xP_address = GetPtrAddr(gameModule + 0x004B324C, [0x158])
 lvl_address = GetPtrAddr(gameModule + 0x004B313C, [0x80])
 
 def update_values():
-    global valueHP, valueMP, valueTargetHP, valueTargetMP, valueXP, valueLvl
+    global valueHP, valuemaxHP, valueMP,valuemaxMP,valueTargetmaxHP, valueTargetHP,valueTargetmaxMP, valueTargetMP, valueXP, valueLvl
     valueHP = pm.read_int(HP_address)
+    valuemaxHP = pm.read_int(maxHP_address)
     valueMP = pm.read_int(MP_address)
+    valuemaxMP = pm.read_int(maxMP_address)
     valueTargetHP = pm.read_int(targetHP_address)
     valueTargetMP = pm.read_int(targetMP_address)
+    valueTargetmaxHP = pm.read_int(targetmaxHP_address)
+    valueTargetmaxMP = pm.read_int(targetmaxMP_address)
     valueXP = pm.read_int(xP_address)
     valueLvl = pm.read_int(lvl_address)
-    label_text2 = "HP:" + str(valueHP)
-    label_text3 = "MP:" + str(valueMP)
-    label_text4 = "HP:" + str(valueTargetHP)
-    label_text5 = "MP:" + str(valueTargetMP)
-    label_text6 = "XP:" + str(valueXP)
+    label_text2 = "HP:" + str(valueHP) + "/" + str(valuemaxHP)
+    label_text3 = "MP:" + str(valueMP) + "/" + str(valuemaxMP)
+    label_text4 = "HP:" + str(valueTargetHP) + "/" + str(valueTargetmaxHP)
+    label_text5 = "MP:" + str(valueTargetMP) + "/" + str(valueTargetmaxMP)
+    label_text6 = "XP:" + str(valueXP) + "%"
     label_text7 = "LV:" + str(valueLvl)
     label2.config(text=label_text2)
     label3.config(text=label_text3)
@@ -102,36 +114,36 @@ label0 = tk.Label(root, text=status)
 label0.grid(column=0, row=2, sticky="W")
 
 label1 = tk.Label(root, text=find)
-label1.grid(column=0, row=3, sticky="W")
+label1.grid(column=0, row=4, sticky="W")
 
 #player label
 player = tk.Label(root, text="Player")
-player.grid(column=2, row=0, sticky="W")
+player.grid(column=2, row=0, sticky="W", padx=5)
 
 label2 = tk.Label(root)
-label2.grid(column=2, row=1, sticky="W")
+label2.grid(column=2, row=1, sticky="W", padx=5)
 
 label3 = tk.Label(root)
-label3.grid(column=2, row=2, sticky="W")
+label3.grid(column=2, row=2, sticky="W", padx=5)
 
 label6 = tk.Label(root)
-label6.grid(column=2, row=3, sticky="W")
+label6.grid(column=2, row=3, sticky="W", padx=5)
 
 label7 = tk.Label(root)
-label7.grid(column=2, row=4, sticky="W")
+label7.grid(column=2, row=4, sticky="W", padx=5)
 
 input0 = tk.Entry(root)
-input0.grid(column=3, row=1, sticky="W")
+input0.grid(column=3, row=1, sticky="W", padx=5)
 
 #target label
 target = tk.Label(root, text="Target")
-target.grid(column=4, row=0, sticky="W")
+target.grid(column=4, row=0, sticky="W", padx=10)
 
 label4 = tk.Label(root)
-label4.grid(column=4, row=1, sticky="W")
+label4.grid(column=4, row=1, sticky="W", padx=10)
 
 label5 = tk.Label(root)
-label5.grid(column=4, row=2, sticky="W")
+label5.grid(column=4, row=2, sticky="W", padx=10)
 
 update_values()
 
