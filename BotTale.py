@@ -6,10 +6,10 @@ import pymem.process
 
 window_title = "NosTale"
 pm = pymem.Pymem("NosTaleClientX.exe")
-
-# get the base address of the game module
 gameModule = pymem.process.module_from_name(pm.process_handle, "NosTaleClientX.exe").lpBaseOfDll
 
+
+# für die values aus NosTale
 def GetPtrAddr(base, offsets):
     addr = pm.read_int(base)
     for i in offsets:
@@ -20,14 +20,27 @@ def GetPtrAddr(base, offsets):
     return addr
 
 HP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC4, 0x4C])
-valueHP = pm.read_int(HP_address)
-label_text2 = valueHP
-
 MP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC8, 0x4C])
-valueMP = pm.read_int(MP_address)
-label_text3 = valueMP
+enemyHP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC8, 0xC4])
+enemyMP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC4, 0x22C])
 
-# leertasten bot
+def update_values():
+    global valueHP, valueMP, valueEnemyHP, valueEnemyMP
+    valueHP = pm.read_int(HP_address)
+    valueMP = pm.read_int(MP_address)
+    valueEnemyHP = pm.read_int(enemyHP_address)
+    valueEnemyMP = pm.read_int(enemyMP_address)
+    label_text2 = "HP:" + str(valueHP)
+    label_text3 = "MP:" + str(valueMP)
+    label_text4 = "enemy HP:" + str(valueEnemyHP)
+    label_text5 = "enemy MP:" + str(valueEnemyMP)
+    label2.config(text=label_text2)
+    label3.config(text=label_text3)
+    label4.config(text=label_text4)
+    label5.config(text=label_text5)
+    root.after(1000, update_values)
+
+# Leertasten bot via keypress
 bot_running = False
 
 def button1_click():
@@ -53,33 +66,34 @@ def button2_click():
     print("Bot stopped")
 
 
-# Main Window
+#window that opens when you start the program
 root = tk.Tk()
 root.title("BotTale")
 root.resizable(False, False)
 
-hwnd = win32gui.FindWindow(None, "NosTale")
-if hwnd == 0:
-    label_text = "can't find NosTale"
-else:
-    label_text = "NosTale found"
-
 canvas = tk.Canvas(root, bg="#263D42")
-canvas.grid(columnspan=2, rowspan=2)
 
 button1 = tk.Button(root, text="Start", command=button1_click, bg="white", fg="black", width=10)
 button1.grid(column=0, row=0)
 
 button2 = tk.Button(root, text="Stop", command=button2_click, bg="white", fg="black", width=10)
-button2.grid(column=1, row=0)
+button2.grid(column=0, row=1)
 
-label1 = tk.Label(root, text=label_text, bg="#263D42", fg="white")
-label1.grid(column=0, row=1)
+label1 = tk.Label(root, text="NosTale found")
+label1.grid(column=2, row=0, sticky="W")
 
-label2 = tk.Label(root, text=label_text2, bg="#263D42", fg="white")
-label2.grid(column=1, row=1)
+label2 = tk.Label(root, text="HP: ")
+label2.grid(column=2, row=1, sticky="W")
 
-label2 = tk.Label(root, text=label_text3, bg="#263D42", fg="white")
-label2.grid(column=2, row=1)
+label3 = tk.Label(root, text="MP: ")
+label3.grid(column=2, row=2, sticky="W")
+
+label4 = tk.Label(root, text="MP: ")
+label4.grid(column=2, row=3, sticky="W")
+
+label5 = tk.Label(root, text="MP: ")
+label5.grid(column=2, row=4, sticky="W")
+
+update_values()
 
 root.mainloop()
