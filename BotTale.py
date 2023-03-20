@@ -1,40 +1,31 @@
 import tkinter as tk
 import win32gui
 import win32con
-import ctypes
+import pymem
+import pymem.process
 
-
-PROCESS_ALL_ACCESS = 0x1F0FFF
-MEM_READ = 0x00000010
-
-address = 0x15D8E6F4
 window_title = "NosTale"
+pm = pymem.Pymem("NosTaleClientX.exe")
 
-# Finden des Fensters
-hwnd = ctypes.windll.user32.FindWindowW(None, window_title)
-if hwnd == 0:
-    print("NosTale is not open")
-    exit()
+# get the base address of the game module
+gameModule = pymem.process.module_from_name(pm.process_handle, "NosTaleClientX.exe").lpBaseOfDll
 
-# Finden der Prozess-ID des Fensters
-pid = ctypes.c_ulong()
-ctypes.windll.user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+def GetPtrAddr(base, offsets):
+    addr = pm.read_int(base)
+    for i in offsets:
+        if i !=offsets[-1]:
+            addr = pm.read_int(addr + i)
+        else:
+            addr += i
+    return addr
 
-# Öffnen des Prozesses
-process_handle = ctypes.windll.kernel32.OpenProcess(PROCESS_ALL_ACCESS, False, pid)
-if process_handle == 0:
-    print("cant open the process, maybe NosTale is not open?")
-    exit()
+HP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC4, 0x4C])
+valueHP = pm.read_int(HP_address)
+label_text2 = valueHP
 
-# Auslesen des Werts an der Adresse
-value = ctypes.c_ulong()
-ctypes.windll.kernel32.ReadProcessMemory(process_handle, address, ctypes.byref(value), ctypes.sizeof(value), None)
-
-# Schließen des Prozesses
-ctypes.windll.kernel32.CloseHandle(process_handle)
-
-label_text2 = "HP" , value.value
-
+MP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC8, 0x4C])
+valueMP = pm.read_int(MP_address)
+label_text3 = valueMP
 
 # leertasten bot
 bot_running = False
@@ -65,7 +56,7 @@ def button2_click():
 # Main Window
 root = tk.Tk()
 root.title("BotTale")
-root.resizable(False, False)  # Das Fenster ist nicht resizeable
+root.resizable(False, False)
 
 hwnd = win32gui.FindWindow(None, "NosTale")
 if hwnd == 0:
@@ -87,5 +78,8 @@ label1.grid(column=0, row=1)
 
 label2 = tk.Label(root, text=label_text2, bg="#263D42", fg="white")
 label2.grid(column=1, row=1)
+
+label2 = tk.Label(root, text=label_text3, bg="#263D42", fg="white")
+label2.grid(column=2, row=1)
 
 root.mainloop()
