@@ -7,6 +7,7 @@ import pymem.process
 window_title = "NosTale"
 pm = pymem.Pymem("NosTaleClientX.exe")
 gameModule = pymem.process.module_from_name(pm.process_handle, "NosTaleClientX.exe").lpBaseOfDll
+bot_running = False
 
 print("Welcome to BotTale")
 print("BotTale is a bot for the game NosTale written in Python")
@@ -16,7 +17,7 @@ try:
     process = pymem.Pymem("NosTaleClientX.exe")
     find = "NosTale found"
 except pymem.exception.ProcessNotFound:
-    find = "nosTale not found"
+    alert = "NosTale not found"
 
 
 
@@ -41,8 +42,11 @@ targetmaxMP_address = GetPtrAddr(gameModule + 0x004B2F68, [0x268, 0x138])
 xP_address = GetPtrAddr(gameModule + 0x004B324C, [0x158])
 lvl_address = GetPtrAddr(gameModule + 0x004B313C, [0x80])
 
+def calculate_percentage(value, max_value):
+    return f"{value}/{max_value} ({int(value / max_value * 100)}%)"
+
 def update_values():
-    global valueHP, valuemaxHP, valueMP,valuemaxMP,valueTargetmaxHP, valueTargetHP,valueTargetmaxMP, valueTargetMP, valueXP, valueLvl
+    global valueHP, valuemaxHP, valueMP, valuemaxMP, valueTargetmaxHP, valueTargetHP, valueTargetmaxMP, valueTargetMP, valueXP, valueLvl
     valueHP = pm.read_int(HP_address)
     valuemaxHP = pm.read_int(maxHP_address)
     valueMP = pm.read_int(MP_address)
@@ -53,24 +57,24 @@ def update_values():
     valueTargetmaxMP = pm.read_int(targetmaxMP_address)
     valueXP = pm.read_int(xP_address)
     valueLvl = pm.read_int(lvl_address)
-    label_text2 = "HP:" + str(valueHP) + "/" + str(valuemaxHP)
-    label_text3 = "MP:" + str(valueMP) + "/" + str(valuemaxMP)
-    label_text4 = "HP:" + str(valueTargetHP) + "/" + str(valueTargetmaxHP)
-    label_text5 = "MP:" + str(valueTargetMP) + "/" + str(valueTargetmaxMP)
-    label_text6 = "XP:" + str(valueXP) + "%"
-    label_text7 = "LV:" + str(valueLvl)
+
+    label_text2 = f"HP:{calculate_percentage(valueHP, valuemaxHP)}"
+    label_text3 = f"MP:{calculate_percentage(valueMP, valuemaxMP)}"
+    label_text4 = f"HP:{calculate_percentage(valueTargetHP, valueTargetmaxHP)}"
+    label_text5 = f"MP:{calculate_percentage(valueTargetMP, valueTargetmaxMP)}"
+    label_text6 = f"XP:{valueXP}%"
+    label_text7 = f"LV:{valueLvl}"
+
     label2.config(text=label_text2)
     label3.config(text=label_text3)
     label4.config(text=label_text4)
     label5.config(text=label_text5)
     label6.config(text=label_text6)
     label7.config(text=label_text7)
+
     root.after(1000, update_values)
 
-
-# Leertasten bot via keypress
-bot_running = False
-
+# spacebar bot via keypress
 def button1_click():
     global bot_running
     global status
