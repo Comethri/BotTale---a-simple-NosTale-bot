@@ -3,10 +3,10 @@ import win32gui
 import win32con
 import pymem
 import pymem.process
-import socket
 import asyncio
 from asyncio import run
-from utils import get_nostale_packet_logger_ports
+from utils import connect_to_packet_logger
+
 bot_running = False
 pm = pymem.Pymem("NosTaleClientX.exe")
 
@@ -15,45 +15,37 @@ print("BotTale is a bot for the game NosTale written in Python")
 print("BotTale is currently in development")
 
 
-def connect_to_packet_logger():
-    PACKET_LOGGER_IP = "127.0.0.1"
-    PACKET_LOGGER_PORT = get_nostale_packet_logger_ports()[0]
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.connect((PACKET_LOGGER_IP, PACKET_LOGGER_PORT))
-        print("Connected to packet logger")
-    except ConnectionRefusedError:
-        print("Connection to packet logger refused")
-        return None
-    return sock
-
-def receive_packet(sock, filters=None):
-    data = sock.recv(8192)
-    if not data:
-        return None
-    decoded_data = data.decode("utf-8")
-    packets = decoded_data.split("\r\n")
-    if filters:
-        packets = [packet for packet in packets if any(keyword in packet for keyword in filters)]
-    return packets
-
-async def main():
-    await wait_for_map_change()
-
 async def wait_for_map_change():
     reader = connect_to_packet_logger()
+    print("Waiting for map change.")
     while True:
-        print("Waiting for map change.")
         data = reader.recv(8192)
         if not data:
             continue
         decoded_data = data.decode("utf-8")
         packets = decoded_data.split("\r\n")
-        filtered_packets = [packet for packet in packets if "c_info" in packet]
+        filtered_packets = [packet for packet in packets if packet.startswith("0 c_") and "c_map" in packet or "c_info" in packet or "c_lev" in packet]
         if filtered_packets:
             received_packet = filtered_packets[0]
             print(f"Received packet: {received_packet}")
-            break
+            if "0 c_info" in received_packet:
+                word, number = extract_info_from_packet(received_packet)
+                print(f"Extracted word: {word}")
+                print(f"Extracted number: {number}")
+                return received_packet
+
+
+async def main():
+    port = 13245
+    packet_logger = get_nostale_packet_logger_ports(port)
+    packet_logger.serve()
+    while True:
+        print("Waiting for map change.")
+        c_map_packet = await packet_logger.wait_for_packet(lambda _packet: _packet[1] == "c_map")
+        print("Map have been changed, c_map packet:", c_map_packet)
+
+
+
 
 # für die values aus NosTale
 def GetPtrAddr(base, offsets):
@@ -68,12 +60,12 @@ def GetPtrAddr(base, offsets):
 gameModule = pymem.process.module_from_name(pm.process_handle, "NosTaleClientX.exe").lpBaseOfDll
 HP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC4, 0x4C])
 MP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC8, 0x4C])
-maxHP_address = GetPtrAddr(gameModule + 0x004B2F68, [0x264, 0x48])
-maxMP_address = GetPtrAddr(gameModule + 0x004B2F68, [0x268, 0x48])
-targetHP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC8, 0xC4])
-targetMP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC4, 0x22C])
-targetmaxHP_address = GetPtrAddr(gameModule + 0x004B2F68, [0x268, 0xC0])
-targetmaxMP_address = GetPtrAddr(gameModule + 0x004B2F68, [0x268, 0x138])
+maxHP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC4, 0x48])
+maxMP_address = GetPtrAddr(gameModule + 0x004B2EEC, [0xC8, 0x48])
+targetHP_address = GetPtrAddr(gameModule + 0x004B2EF0, [0xFC, 0x4C])
+targetMP_address = GetPtrAddr(gameModule + 0x004B2EF0, [0x100, 0x4C])
+targetmaxHP_address = GetPtrAddr(gameModule + 0x004B2EF0, [0xFC, 0x48])
+targetmaxMP_address = GetPtrAddr(gameModule + 0x004B2EF0, [0x100, 0x48])
 xP_address = GetPtrAddr(gameModule + 0x004B324C, [0x158])
 lvl_address = GetPtrAddr(gameModule + 0x004B313C, [0x80])
 
@@ -137,7 +129,6 @@ def button2_click():
 
 #window that opens when you start the program
 root = tk.Tk()
-#window name with post from get_nostale_packet_logger_ports
 root.title("BotTale")
 root.resizable(False, False)
 
@@ -149,7 +140,7 @@ button1.grid(column=0, row=0)
 button2 = tk.Button(root, text="Stop", command=button2_click, bg="white", fg="black", width=10)
 button2.grid(column=0, row=1)
 
-button3 = tk.Button(root, text="Packet", command=wait_for_map_change, bg="white", fg="black", width=10)
+button3 = tk.Button(root, text="Packet", command="handle_map_change", bg="white", fg="black", width=10)
 button3.grid(column=0, row=2)
 
 status = "Not started"
@@ -186,5 +177,5 @@ label5 = tk.Label(root)
 label5.grid(column=4, row=2, sticky="W", padx=10)
 
 update_values()
-asyncio.run(main())
+# asyncio.run(main())
 root.mainloop()
