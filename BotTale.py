@@ -3,6 +3,8 @@ import win32gui
 import win32con
 import pymem
 import pymem.process
+from os import getpid
+from psutil import process_iter
 
 bot_running = False
 pm = pymem.Pymem("NosTaleClientX.exe")
@@ -182,7 +184,6 @@ def cella_calc():
 
 #window that opens when you start the program
 root = tk.Tk()
-root.title("BotTale")
 root.resizable(False, False)
 root["bg"] = "#454545"
 
@@ -222,6 +223,18 @@ label4.grid(column=4, row=1, sticky="W", padx=10)
 
 label5 = tk.Label(root, background="#454545", fg="white")
 label5.grid(column=4, row=2, sticky="W", padx=10)
+
+def get_pid():
+    for proc in process_iter(['pid', 'name']):
+        if proc.name() == "NostaleClientX.exe":
+            pid = proc.pid
+            return pid
+        
+pid = get_pid()
+if pid:
+    root.title(f"BotTale - {pid}")
+else:
+    root.title("BotTale")
 
 update_values()
 root.mainloop()
