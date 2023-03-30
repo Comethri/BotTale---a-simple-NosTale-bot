@@ -3,9 +3,6 @@ import win32gui
 import win32con
 import pymem
 import pymem.process
-import asyncio
-from asyncio import run
-from utils import connect_to_packet_logger
 
 bot_running = False
 pm = pymem.Pymem("NosTaleClientX.exe")
@@ -13,38 +10,6 @@ pm = pymem.Pymem("NosTaleClientX.exe")
 print("Welcome to BotTale")
 print("BotTale is a bot for the game NosTale written in Python")
 print("BotTale is currently in development")
-
-
-async def wait_for_map_change():
-    reader = connect_to_packet_logger()
-    print("Waiting for map change.")
-    while True:
-        data = reader.recv(8192)
-        if not data:
-            continue
-        decoded_data = data.decode("utf-8")
-        packets = decoded_data.split("\r\n")
-        filtered_packets = [packet for packet in packets if packet.startswith("0 c_") and "c_map" in packet or "c_info" in packet or "c_lev" in packet]
-        if filtered_packets:
-            received_packet = filtered_packets[0]
-            print(f"Received packet: {received_packet}")
-            if "0 c_info" in received_packet:
-                word, number = extract_info_from_packet(received_packet)
-                print(f"Extracted word: {word}")
-                print(f"Extracted number: {number}")
-                return received_packet
-
-
-async def main():
-    port = 13245
-    packet_logger = get_nostale_packet_logger_ports(port)
-    packet_logger.serve()
-    while True:
-        print("Waiting for map change.")
-        c_map_packet = await packet_logger.wait_for_packet(lambda _packet: _packet[1] == "c_map")
-        print("Map have been changed, c_map packet:", c_map_packet)
-
-
 
 
 # für die values aus NosTale
@@ -101,6 +66,7 @@ def update_values():
 
     root.after(500, update_values)
 
+
 # spacebar bot via keypress
 def button1_click():
     global bot_running
@@ -127,12 +93,107 @@ def button2_click():
     status = "Stopped"
     label0.config(text=status)
 
+def cella_calc():
+    calc = tk.Tk()
+    calc.title("Cella Calc")
+    calc.resizable(False, False)
+    calc["bg"] = "#454545"
+
+    gillion = tk.Label(calc, text="Gillion", background="#454545", fg="white", padx=5, pady=5)
+    gillion.grid(column=0, row=0, sticky="W")
+
+    gillion_entry = tk.Entry(calc, width=10)
+    gillion_entry.grid(column=1, row=0)
+    gillion_entry.insert(0, "1000")
+
+    gillion_entry_price = tk.Entry(calc, width=10)
+    gillion_entry_price.grid(column=2, row=0)
+    gillion_entry_price.insert(0, "0")
+
+    gillion_full_price = tk.Label(calc, text="?", background="#454545", fg="white")
+    gillion_full_price.grid(column=3, row=0, sticky="W")
+
+    veredler = tk.Label(calc, text="Veredler", background="#454545", fg="white", padx=5, pady=5)
+    veredler.grid(column=0, row=1, sticky="W")
+
+    veredler_entry = tk.Entry(calc, width=10)
+    veredler_entry.grid(column=1, row=1)
+    veredler_entry.insert(0, "1000")
+
+    veredler_entry_price = tk.Entry(calc, width=10)
+    veredler_entry_price.grid(column=2, row=1)
+    veredler_entry_price.insert(0, "500")
+
+    veredler_full_price = tk.Label(calc, text="?", background="#454545", fg="white")
+    veredler_full_price.grid(column=3, row=1, sticky="W")
+
+    cella = tk.Label(calc, text="Cella", background="#454545", fg="white", padx=5, pady=5)
+    cella.grid(column=0, row=2, sticky="W")
+
+    cella_entry = tk.Entry(calc, width=10)
+    cella_entry.grid(column=1, row=2)
+    cella_entry.insert(0, "7500")
+
+    cella_entry_price = tk.Entry(calc, width=10)
+    cella_entry_price.grid(column=2, row=2)
+    cella_entry_price.insert(0, "0")
+
+    cella_full_price = tk.Label(calc, text="?", background="#454545", fg="white")
+    cella_full_price.grid(column=3, row=2, sticky="W")
+
+    calc_win_lose = tk.Label(calc, text="Win/Lose", background="#454545", fg="white")
+    calc_win_lose.grid(column=3, row=3, sticky="W")
+
+    def calculate(*args):
+        try:
+            value1 = int(gillion_entry.get())
+            value2 = int(gillion_entry_price.get())
+            result = value1 * value2
+            gillion_full_price.config(text=result)
+
+            value3 = int(veredler_entry.get())
+            value4 = int(veredler_entry_price.get())
+            result2 = value3 * value4
+            veredler_full_price.config(text=result2)
+
+            value5 = int(cella_entry.get())
+            value6 = int(cella_entry_price.get())
+            result3 = value5 * value6
+            cella_full_price.config(text=result3)
+            
+            result4 = result3 - result2 - result
+            calc_win_lose.config(text=result4)
+            if result4 < 0:
+                calc_win_lose.config(fg="red")
+            else:
+                calc_win_lose.config(fg="green")
+        except ValueError:
+            pass
+
+    gillion_entry.bind("<KeyRelease>", calculate)
+    gillion_entry_price.bind("<KeyRelease>", calculate)
+    veredler_entry.bind("<KeyRelease>", calculate)
+    veredler_entry_price.bind("<KeyRelease>", calculate)
+    cella_entry.bind("<KeyRelease>", calculate)
+    cella_entry_price.bind("<KeyRelease>", calculate)
+
+
+
+
+
+
+
+
+    calc.mainloop()
+
+
+
 #window that opens when you start the program
 root = tk.Tk()
 root.title("BotTale")
 root.resizable(False, False)
+root["bg"] = "#454545"
 
-canvas = tk.Canvas(root, bg="#263D42")
 
 button1 = tk.Button(root, text="Start", command=button1_click, bg="white", fg="black", width=10)
 button1.grid(column=0, row=0)
@@ -140,42 +201,38 @@ button1.grid(column=0, row=0)
 button2 = tk.Button(root, text="Stop", command=button2_click, bg="white", fg="black", width=10)
 button2.grid(column=0, row=1)
 
-button3 = tk.Button(root, text="Packet", command="handle_map_change", bg="white", fg="black", width=10)
+button3 = tk.Button(root, text="Cella Calc", command=cella_calc, bg="white", fg="black", width=10)
 button3.grid(column=0, row=2)
 
 status = "Not started"
-label0 = tk.Label(root, text=status)
+label0 = tk.Label(root, text=status, background="#454545", fg="white")
 label0.grid(column=0, row=3, sticky="W")
 
 #player label
-player = tk.Label(root, text="Player")
+player = tk.Label(root, text="Player", background="#454545", fg="white")
 player.grid(column=2, row=0, sticky="W", padx=5)
 
-label2 = tk.Label(root)
+label2 = tk.Label(root, background="#454545", fg="white")
 label2.grid(column=2, row=1, sticky="W", padx=5)
 
-label3 = tk.Label(root)
+label3 = tk.Label(root, background="#454545", fg="white")
 label3.grid(column=2, row=2, sticky="W", padx=5)
 
-label6 = tk.Label(root)
+label6 = tk.Label(root, background="#454545", fg="white")
 label6.grid(column=2, row=3, sticky="W", padx=5)
 
-label7 = tk.Label(root)
+label7 = tk.Label(root, background="#454545", fg="white")
 label7.grid(column=2, row=4, sticky="W", padx=5)
 
-input0 = tk.Entry(root)
-input0.grid(column=3, row=1, sticky="W", padx=5)
-
 #target label
-target = tk.Label(root, text="Target")
+target = tk.Label(root, text="Target", background="#454545", fg="white")
 target.grid(column=4, row=0, sticky="W", padx=10)
 
-label4 = tk.Label(root)
+label4 = tk.Label(root, background="#454545", fg="white")
 label4.grid(column=4, row=1, sticky="W", padx=10)
 
-label5 = tk.Label(root)
+label5 = tk.Label(root, background="#454545", fg="white")
 label5.grid(column=4, row=2, sticky="W", padx=10)
 
 update_values()
-# asyncio.run(main())
 root.mainloop()
