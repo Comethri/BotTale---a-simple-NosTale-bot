@@ -68,13 +68,19 @@ def update_values():
 
 
 # spacebar bot via keypress
-def button1_click():
+def toggle_bot():
     global bot_running
-    global status
-    bot_running = True
-    perform_spacebar()
-    status = "Started"
-    label0.config(text=status)
+    if bot_running:
+        bot_running = False
+        status = "Stopped"
+        label0.config(text=status)
+        button1.config(text="Start")
+    else:
+        bot_running = True
+        status = "Started"
+        label0.config(text=status)
+        button1.config(text="Stop")
+        perform_spacebar()
 
 def perform_spacebar():
     global bot_running
@@ -87,12 +93,7 @@ def perform_spacebar():
             win32gui.PostMessage(hwnd, win32con.WM_KEYUP, win32con.VK_SPACE, 0)
         root.after(1000, perform_spacebar)
 
-def button2_click():
-    global bot_running
-    bot_running = False
-    status = "Stopped"
-    label0.config(text=status)
-
+# Cella calc
 def cella_calc():
     calc = tk.Tk()
     calc.title("Cella Calc")
@@ -177,16 +178,7 @@ def cella_calc():
     cella_entry.bind("<KeyRelease>", calculate)
     cella_entry_price.bind("<KeyRelease>", calculate)
 
-
-
-
-
-
-
-
     calc.mainloop()
-
-
 
 #window that opens when you start the program
 root = tk.Tk()
@@ -195,21 +187,18 @@ root.resizable(False, False)
 root["bg"] = "#454545"
 
 
-button1 = tk.Button(root, text="Start", command=button1_click, bg="white", fg="black", width=10)
-button1.grid(column=0, row=0)
-
-button2 = tk.Button(root, text="Stop", command=button2_click, bg="white", fg="black", width=10)
-button2.grid(column=0, row=1)
+button1 = tk.Button(root, text="Start", command=toggle_bot, bg="white", fg="black", width=10)
+button1.grid(column=5, row=5)
 
 button3 = tk.Button(root, text="Cella Calc", command=cella_calc, bg="white", fg="black", width=10)
-button3.grid(column=0, row=2)
+button3.grid(column=0, row=5)
 
 status = "Not started"
 label0 = tk.Label(root, text=status, background="#454545", fg="white")
-label0.grid(column=0, row=3, sticky="W")
+label0.grid(column=5, row=4, sticky="W")
 
 #player label
-player = tk.Label(root, text="Player", background="#454545", fg="white")
+player = tk.Label(root, text="Player:", background="#454545", fg="white")
 player.grid(column=2, row=0, sticky="W", padx=5)
 
 label2 = tk.Label(root, background="#454545", fg="white")
@@ -225,7 +214,7 @@ label7 = tk.Label(root, background="#454545", fg="white")
 label7.grid(column=2, row=4, sticky="W", padx=5)
 
 #target label
-target = tk.Label(root, text="Target", background="#454545", fg="white")
+target = tk.Label(root, text="Target:", background="#454545", fg="white")
 target.grid(column=4, row=0, sticky="W", padx=10)
 
 label4 = tk.Label(root, background="#454545", fg="white")
